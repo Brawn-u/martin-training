@@ -121,12 +121,14 @@ function App(){
   const[done,setDone]=useState([]);
   const[modal,setModal]=useState(null);
   const[exSeeds,setExSeeds]=useState({});
+  const[shuffleCount,setShuffleCount]=useState(0);
+  const[swapCounts,setSwapCounts]=useState({});
 
   const split=getSplit(days);const int=INTENSITY_MAP[intLvl];
   const C={gold:"#e2b06f",bg:"#1a1a2e",card:"rgba(255,255,255,0.035)",bdr:"rgba(255,255,255,0.07)",t1:"#f0f0f0",t2:"rgba(255,255,255,0.5)",t3:"rgba(255,255,255,0.3)",green:"#7dd8a0"};
 
   const dayType=split.schedule[curDay]||"full";
-  const baseRng=seededRandom(seed+curDay);
+  const baseRng=seededRandom(seed+shuffleCount+curDay);
   const baseWorkout=gen(dayType,equipment,aches,baseRng,int,style);
 
   const workout=useMemo(()=>{
@@ -136,7 +138,9 @@ function App(){
   },[seed,curDay,exSeeds,equipment,aches,style,intLvl,days]);
 
   const shuffleSingle=(idx)=>{const key=`${curDay}-${idx}`;setExSeeds(p=>({...p,[key]:(p[key]||0)+Math.floor(Math.random()*10000)+1}));};
-  const handleGenerate=()=>{setCurDay(0);setDone([]);setExSeeds({});setSeed(dateSeed(new Date()));setScreen("workout");};
+  const handleShuffle=()=>{setShuffleCount(c=>c+1);setSwapCounts({});};
+  const handleSwap=(slotIdx)=>{const key=`${curDay}-${slotIdx}`;const db=EX[style]||EX.strength;const cat=getCatForSlot(dayType,slotIdx);const currentEx=workout.exercises[slotIdx];const pool=filt((db[cat]||{})[equipment]||[],aches).filter(e=>e.name!==currentEx.name&&!workout.exercises.some((ex,i)=>i!==slotIdx&&ex.name===e.name));if(pool.length>0){const next=(swapCounts[slotIdx]??0)+1;setSwapCounts(p=>({...p,[slotIdx]:next}));const seed2=dateSeed(new Date())+slotIdx*10000+next;setExSeeds(p=>({...p,[key]:seed2}));}};
+  const handleGenerate=()=>{setCurDay(0);setDone([]);setExSeeds({});setSeed(dateSeed(new Date()));setShuffleCount(0);setSwapCounts({});setScreen("workout");};
 
   const base={fontFamily:"'Nunito Sans',sans-serif",minHeight:"100vh",minHeight:"100dvh",background:"linear-gradient(165deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)",color:C.t1,paddingBottom:32};
   const hdr=(sz)=>({fontFamily:"'Playfair Display',serif",fontSize:sz,color:C.gold,margin:0});
@@ -198,7 +202,7 @@ function App(){
       <div style={{padding:"16px 24px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
           <button onClick={()=>setScreen("setup")} style={{background:"none",border:"1px solid rgba(255,255,255,0.15)",color:C.t2,padding:"8px 16px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:500}}>← Settings</button>
-          <button onClick={()=>{setSeed(s=>s+1);setExSeeds({});}} style={{background:"rgba(226,176,111,0.12)",border:"1px solid rgba(226,176,111,0.3)",color:C.gold,padding:"8px 16px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:600}}>↻ Shuffle All</button>
+          <button onClick={()=>{handleShuffle();setExSeeds({});}} style={{background:"rgba(226,176,111,0.12)",border:"1px solid rgba(226,176,111,0.3)",color:C.gold,padding:"8px 16px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:600}}>↻ Shuffle All</button>
         </div>
         <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4,marginBottom:8}}>
           {split.schedule.map((_,i)=>(<div key={i} onClick={()=>setCurDay(i)} style={{padding:"8px 14px",borderRadius:10,cursor:"pointer",whiteSpace:"nowrap",fontSize:12,fontWeight:600,background:curDay===i?"rgba(226,176,111,0.18)":C.card,border:curDay===i?"1px solid rgba(226,176,111,0.4)":`1px solid ${C.bdr}`,color:curDay===i?C.gold:C.t2,opacity:done.includes(i)?0.5:1,transition:"all 0.2s"}}>Day {i+1}{done.includes(i)?" ✓":""}</div>))}
@@ -221,6 +225,7 @@ function App(){
           <div style={{fontSize:11,color:C.t3,marginBottom:10}}>Tap exercise for video & form cues · ↻ to swap</div>
           {workout.exercises.map((ex,i)=>(<div key={`${curDay}-${i}-${ex.name}`} style={{display:"flex",alignItems:"center",padding:"11px 0",borderBottom:i<workout.exercises.length-1?"1px solid rgba(255,255,255,0.05)":"none",gap:8}}>
             <button onClick={e=>{e.stopPropagation();shuffleSingle(i);}} style={{background:"rgba(226,176,111,0.06)",border:"1px solid rgba(226,176,111,0.18)",color:C.gold,width:32,height:32,borderRadius:8,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>↻</button>
+            <button onClick={e=>{e.stopPropagation();handleSwap(i);}} style={{background:"rgba(125,216,160,0.06)",border:"1px solid rgba(125,216,160,0.18)",color:C.green,width:32,height:32,borderRadius:8,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:1}}>⇄</button>
             <div onClick={()=>setModal(ex)} style={{flex:1,cursor:"pointer",minWidth:0}}>
               <div style={{fontSize:14,fontWeight:500,color:C.t1,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span>{ex.name}</span><span style={{fontSize:9,color:"#fff",background:"rgba(220,40,40,0.75)",padding:"2px 7px",borderRadius:4,fontWeight:700,flexShrink:0}}>▶ VIDEO</span></div>
               <div style={{fontSize:12,color:C.t3,marginTop:2}}>{ex.muscle}</div>
