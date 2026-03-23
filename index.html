@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Martin Training"/>
+<meta name="theme-color" content="#1a1a2e"/>
+<title>Martin Training — Personalized Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body,#root{min-height:100vh;min-height:100dvh;font-family:'Nunito Sans',sans-serif}
+body{background:#1a1a2e;color:#f0f0f0;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(226,176,111,0.2);border-radius:4px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useMemo} = React;
+
+const BODY_AREAS=["Shoulders","Upper Back","Lower Back","Knees","Hips","Wrists","Ankles","Neck","Elbows"];
+const EQUIPMENT_OPTIONS=[{id:"full",label:"Full Gym",icon:"🏋️",desc:"Barbells, machines, cables"},{id:"home",label:"Home Gym",icon:"🏠",desc:"Dumbbells, bench, rack"},{id:"minimal",label:"Minimal",icon:"🎒",desc:"Dumbbells & bands"}];
+const STYLE_OPTIONS=[{id:"strength",label:"Strength Training",icon:"💪",desc:"Compound lifts, progressive overload"},{id:"hiit",label:"HIIT",icon:"⚡",desc:"High intensity intervals"},{id:"crossfit",label:"CrossFit Style",icon:"🔥",desc:"Functional movements, WODs"},{id:"bands",label:"Bands & Bodyweight",icon:"🧘",desc:"Resistance bands, calisthenics"}];
+const INTENSITY_OPTIONS=[{id:"light",label:"Light",desc:"2 sets · higher reps"},{id:"moderate",label:"Moderate",desc:"3 sets · balanced"},{id:"challenging",label:"Challenging",desc:"4 sets · lower reps"}];
+const INTENSITY_MAP={light:{sets:2,reps:"12-15",rest:"90s",hiitWork:"20s",hiitRest:"40s",rounds:2},moderate:{sets:3,reps:"10-12",rest:"60-90s",hiitWork:"30s",hiitRest:"30s",rounds:3},challenging:{sets:4,reps:"8-10",rest:"45-60s",hiitWork:"40s",hiitRest:"20s",rounds:4}};
+
+const VIDEO_MAP={"Barbell Bench Press":"rT7DgCr-3pg","Overhead Press":"QAQ64hK4Xxs","Incline Dumbbell Press":"8iPEnn-ltC8","Cable Chest Fly":"Iwe6AmxVf7o","Seated Machine Press":"xUm0BiZfWoC","Landmine Press":"Dvlxb_BHMGY","Dumbbell Floor Press":"uUGDRwge4F8","Dumbbell Shoulder Press":"qEwKCR5JCog","Push-Ups (Elevated)":"4dF1DOWzf20","Dumbbell Arnold Press":"6Z15_WdXmVw","Push-Ups (Knee or Elevated)":"4dF1DOWzf20","Band Chest Press":"JlfOEoJn5pc","Lat Pulldown":"CAwf7n6Luuc","Seated Cable Row":"GZbfZ033f74","Barbell Bent-Over Row":"FWJR5Ve8bnQ","Face Pulls":"rep-qVOkqgk","Single Arm Dumbbell Row":"pYcpY20QaE8","Cable Pullover":"AjCCGN2cHWo","Dumbbell Bent-Over Row":"6TSP1TRMUzs","Band Pull-Aparts":"JObYtU7Y7ag","Dumbbell Reverse Fly":"ttvfGg9d76c","Band Seated Row":"xN1XjLgZGKA","Barbell Back Squat":"bEv6CCg2BC8","Leg Press":"IZxyjW7MPJQ","Goblet Squat":"MeIiIdhvXT4","Bulgarian Split Squat":"2C-uNgKwPLE","Hack Squat Machine":"0tn5K9NlCfo","Walking Lunges":"L8fvypPH3SA","Dumbbell Lunges":"D7KaRcUTQeE","Dumbbell Step-Ups":"9ZknEYboBOQ","Dumbbell Sumo Squat":"ORxSGmKPTYA","Band Squat":"g8idoFbOmLc","Bodyweight Step-Ups":"9ZknEYboBOQ","Romanian Deadlift":"7AaaYR4UPCI","Hip Thrust (Barbell)":"xDmFkJxPzeM","Cable Pull-Through":"MBcke0Vi4BQ","Lying Leg Curl":"1Tq3QdYUuHs","Glute Bridge (Weighted)":"OUgsJ8-Vi0E","Sumo Deadlift":"RQ_sMsMRe2I","Dumbbell Romanian Deadlift":"FQKfr1YDhEk","Dumbbell Hip Thrust":"xDmFkJxPzeM","Single Leg Glute Bridge":"OUgsJ8-Vi0E","Dumbbell Stiff-Leg Deadlift":"FQKfr1YDhEk","Band Good Morning":"t0vRNJbLQHE","Glute Bridge":"OUgsJ8-Vi0E","Band Pull-Through":"MBcke0Vi4BQ","Cable Woodchop":"pAplQXk3dkU","Hanging Knee Raise":"hdng3Nm1x_E","Pallof Press":"AH_QZLm_0-s","Plank Hold":"ASdvN_XEl_c","Ab Rollout (Kneeling)":"uYBOBBv9GzY","Dead Bug":"I5xbsA71kAo","Bird Dog":"wiFNA-KIcCY","Side Plank":"K2VljzCC16g","Pallof Press (Band)":"AH_QZLm_0-s","Band Pallof Press":"AH_QZLm_0-s","Box Jumps":"52r_Ul5k03g","Burpees":"dZgVxmf6jkA","Kettlebell Swings":"YSxHifyI6s8","Mountain Climbers":"nmwgirgXLYM","Battle Rope Slams":"bkQJjUaUGEo","Wall Balls":"fpUD4FMhSnA","Thrusters":"L219ltL15zk","Jump Squats":"A-cFYGvaXc4","Plank to Push-Up":"L4oMiCfmLqY","Band Resisted Squat Jumps":"A-cFYGvaXc4","Bear Crawl":"NehWsIPuiN0","Band Squat to Press":"L219ltL15zk","Bodyweight Circuit (Squats, Push-ups, Planks)":"ASdvN_XEl_c"};
+
+const DEMO={"Barbell Bench Press":{desc:"Lie on bench, press barbell from chest to lockout",cues:["Feet flat on floor","Squeeze shoulder blades together","Lower bar to mid-chest","Press up without locking elbows"]},"Overhead Press":{desc:"Press bar from shoulders to overhead",cues:["Brace core tight","Start bar at shoulders","Press straight overhead","Lower controlled"]},"Incline Dumbbell Press":{desc:"Press dumbbells on an incline bench",cues:["Bench at 30-45 degrees","Lower to upper chest","Press up and slightly in","Control the descent"]},"Cable Chest Fly":{desc:"Bring cable handles together in an arc",cues:["Slight forward lean","Keep elbows soft","Squeeze chest at center","Open slowly"]},"Seated Machine Press":{desc:"Push handles forward on chest press machine",cues:["Adjust seat height","Grip at chest level","Press forward smoothly","Don't lock elbows"]},"Landmine Press":{desc:"Press angled barbell overhead, single arm",cues:["Stagger your stance","Bar at shoulder height","Press up at angle","Brace core throughout"]},"Dumbbell Floor Press":{desc:"Lie on floor, press dumbbells up",cues:["Elbows touch floor each rep","Press straight up","Squeeze chest at top","Lower slowly"]},"Dumbbell Shoulder Press":{desc:"Press dumbbells from shoulders overhead",cues:["Core braced","Start at ear level","Press up and slightly in","Control descent"]},"Push-Ups (Elevated)":{desc:"Hands on bench, standard push-up motion",cues:["Hands shoulder width","Body in straight line","Lower chest to bench","Push back up"]},"Dumbbell Arnold Press":{desc:"Rotate palms while pressing overhead",cues:["Start palms facing you","Rotate as you press","Full rotation at top","Reverse on way down"]},"Push-Ups (Knee or Elevated)":{desc:"Modified push-ups for comfort",cues:["Hands shoulder width","Keep core tight","Lower chest","Press up strong"]},"Band Chest Press":{desc:"Press forward against resistance band",cues:["Anchor band behind you","Hands at chest","Press forward","Control return"]},"Lat Pulldown":{desc:"Pull cable bar down to upper chest",cues:["Wide grip on bar","Lean back slightly","Pull to upper chest","Squeeze lats hard"]},"Seated Cable Row":{desc:"Pull cable handle to midsection while seated",cues:["Sit tall, chest up","Pull to belly button","Squeeze shoulder blades","Extend slowly"]},"Barbell Bent-Over Row":{desc:"Hinge forward, row barbell to belly",cues:["Hinge to 45 degrees","Pull bar to lower chest","Squeeze back at top","Lower controlled"]},"Face Pulls":{desc:"Pull rope to face height with external rotation",cues:["Rope at face level","Pull apart and back","Rotate hands outward","Hold squeeze 1 second"]},"Single Arm Dumbbell Row":{desc:"One arm row with opposite knee on bench",cues:["Keep back flat","Pull elbow past ribs","Squeeze lat at top","Lower slowly"]},"Cable Pullover":{desc:"Pull cable in arc from overhead to hips",cues:["Arms mostly straight","Big sweeping arc","Squeeze lats at bottom","Return controlled"]},"Dumbbell Bent-Over Row":{desc:"Hinge forward, row both dumbbells",cues:["Flat back, hinged forward","Pull to hips","Elbows past torso","Lower controlled"]},"Band Pull-Aparts":{desc:"Pull resistance band apart at shoulder height",cues:["Arms forward, band taut","Pull hands apart","Squeeze between shoulders","Return slowly"]},"Dumbbell Reverse Fly":{desc:"Bent over, raise dumbbells to sides",cues:["Hinge at hips","Soft bend in elbows","Raise out to sides","Squeeze shoulder blades"]},"Band Seated Row":{desc:"Seated row using resistance band on feet",cues:["Loop band on feet","Pull to belly","Sit tall","Extend slowly"]},"Barbell Back Squat":{desc:"Bar on upper back, squat to parallel or below",cues:["Feet shoulder width","Brace core hard","Sit back and down","Drive through heels"]},"Leg Press":{desc:"Press sled away on leg press machine",cues:["Feet high on platform","Lower sled controlled","Press through heels","Don't lock knees out"]},"Goblet Squat":{desc:"Hold dumbbell at chest and squat deep",cues:["Weight tight to chest","Elbows inside knees at bottom","Sit deep with control","Stand tall at top"]},"Bulgarian Split Squat":{desc:"Rear foot elevated on bench, lunge down",cues:["Back foot on bench behind","Lower straight down","Front knee tracks over toes","Push up from front leg"]},"Hack Squat Machine":{desc:"Machine squat on angled platform",cues:["Shoulders under pads","Feet forward on platform","Lower to 90 degrees","Press up smoothly"]},"Walking Lunges":{desc:"Step forward into alternating lunges",cues:["Big step forward each rep","Lower back knee toward floor","Push through front heel","Alternate legs"]},"Dumbbell Lunges":{desc:"Hold dumbbells at sides, lunge forward",cues:["Dumbbells hanging at sides","Step forward","Lower to 90 degrees","Push back to standing"]},"Dumbbell Step-Ups":{desc:"Step onto bench while holding dumbbells",cues:["Full foot on bench","Drive through top heel","Stand tall on top","Step down controlled"]},"Dumbbell Sumo Squat":{desc:"Wide stance squat holding dumbbell",cues:["Wide stance, toes angled out","Hold weight centered low","Sit straight down","Squeeze glutes at top"]},"Band Squat":{desc:"Squat against band resistance",cues:["Band under both feet","Hold at shoulders","Squat to parallel","Stand strong against band"]},"Bodyweight Step-Ups":{desc:"Step up onto a box or bench",cues:["Tall posture throughout","Full foot on box","Drive through heel","Control step down"]},"Romanian Deadlift":{desc:"Hinge at hips, lower weight along legs",cues:["Keep knees slightly soft","Push hips way back","Weight stays close to legs","Squeeze glutes to stand"]},"Hip Thrust (Barbell)":{desc:"Upper back on bench, drive hips up with barbell",cues:["Shoulder blades on bench edge","Feet flat, shins vertical","Drive hips to ceiling","Squeeze glutes 1 full second"]},"Cable Pull-Through":{desc:"Face away from cable, hinge and snap hips",cues:["Cable between legs","Hinge forward deeply","Snap hips forward hard","Squeeze glutes at top"]},"Lying Leg Curl":{desc:"Face down on machine, curl pad toward glutes",cues:["Pad just above heels","Curl toward glutes","Squeeze hamstrings hard","Lower slowly"]},"Glute Bridge (Weighted)":{desc:"Lie flat, bridge hips up with weight on lap",cues:["Feet flat on floor","Weight across hip crease","Drive hips up high","Squeeze and hold at top"]},"Sumo Deadlift":{desc:"Wide stance deadlift from the floor",cues:["Wide stance, toes out","Grip inside your knees","Drive the floor apart","Lock out with glutes"]},"Dumbbell Romanian Deadlift":{desc:"Hinge forward holding dumbbells",cues:["Dumbbells in front of thighs","Push hips way back","Feel hamstring stretch","Stand tall, squeeze glutes"]},"Dumbbell Hip Thrust":{desc:"Hip thrust with dumbbell on lap",cues:["Back against bench edge","Dumbbell across hips","Drive up powerfully","Pause and squeeze at top"]},"Single Leg Glute Bridge":{desc:"Bridge up on one leg for isolation",cues:["One foot planted flat","Other leg extended up","Drive hips up high","Squeeze and hold 1 second"]},"Dumbbell Stiff-Leg Deadlift":{desc:"Nearly straight legs, hinge with dumbbells",cues:["Keep legs almost straight","Push hips way back","Deep hamstring stretch","Stand with glutes"]},"Band Good Morning":{desc:"Band around neck, hinge forward and back",cues:["Band on back of neck","Stand on band","Hinge forward controlled","Drive up with glutes"]},"Glute Bridge":{desc:"Bodyweight bridge, drive hips up",cues:["Feet flat on floor","Drive hips toward ceiling","Squeeze glutes hard","Lower slowly"]},"Band Pull-Through":{desc:"Band anchored low, hinge and stand",cues:["Band between legs","Hinge forward deeply","Drive hips forward","Squeeze at top"]},"Cable Woodchop":{desc:"Rotate torso pulling cable diagonally",cues:["Start high on one side","Rotate through your core","Pull diagonally across","Control the return"]},"Hanging Knee Raise":{desc:"Hang from bar and raise knees to chest",cues:["Firm dead hang grip","Raise knees to chest","Pause at the top","Lower with control"]},"Pallof Press":{desc:"Press cable forward while resisting rotation",cues:["Stand sideways to cable","Hold at chest","Press arms straight out","Resist the rotational pull"]},"Plank Hold":{desc:"Hold a straight-body forearm plank",cues:["Forearms flat on floor","Straight line head to heels","Squeeze glutes and core","Breathe steadily throughout"]},"Ab Rollout (Kneeling)":{desc:"Roll ab wheel out from knees, pull back",cues:["Kneel on pad","Roll out slowly and far","Keep core tight throughout","Pull back using abs"]},"Dead Bug":{desc:"Lie flat, extend opposite arm and leg",cues:["Back pressed firmly to floor","Extend opposite arm and leg","Don't let lower back arch","Alternate sides slowly"]},"Bird Dog":{desc:"On all fours, extend opposite arm and leg",cues:["Hands under shoulders","Extend arm and opposite leg","Hold 2 seconds at top","Keep hips perfectly level"]},"Side Plank":{desc:"Hold a side plank on one forearm",cues:["Forearm under shoulder","Hips stacked vertically","Lift hips high off floor","Hold and breathe steadily"]},"Pallof Press (Band)":{desc:"Anti-rotation press with resistance band",cues:["Band anchored to your side","Hold at chest height","Press arms out straight","Resist the band's pull"]},"Band Pallof Press":{desc:"Anti-rotation press using band",cues:["Stand perpendicular to anchor","Band at chest level","Extend arms fully","Hold and resist twist"]},"Box Jumps":{desc:"Jump explosively up onto a box",cues:["Feet hip width apart","Swing arms and explode up","Land softly on the box","Step down carefully"]},"Burpees":{desc:"Drop to floor, push up, jump up",cues:["Drop to floor fast","Chest touches ground","Push up explosively","Jump and reach overhead"]},"Kettlebell Swings":{desc:"Hinge and swing kettlebell to shoulder height",cues:["Feet shoulder width","Hinge back, load hamstrings","Snap hips forward hard","Arms float up naturally"]},"Mountain Climbers":{desc:"Plank position, alternate driving knees to chest",cues:["Solid high plank","Drive knees to chest","Alternate rapidly","Keep hips level throughout"]},"Battle Rope Slams":{desc:"Raise heavy ropes overhead and slam down",cues:["Athletic stance","Raise both arms high","Slam ropes down hard","Use your entire body"]},"Wall Balls":{desc:"Squat holding ball, throw to wall target",cues:["Medicine ball at chest","Squat deep","Explode up out of squat","Throw ball to target high"]},"Thrusters":{desc:"Front squat directly into overhead press",cues:["Weight at shoulders","Squat to full depth","Drive up explosively","Press overhead at the top"]},"Jump Squats":{desc:"Bodyweight squat with explosive jump",cues:["Squat to parallel","Explode upward","Land softly, absorb impact","Reset and repeat"]},"Plank to Push-Up":{desc:"Alternate between forearm and high plank",cues:["Start on forearms","Push up one arm at a time","Lower back to forearms","Alternate your leading arm"]},"Band Resisted Squat Jumps":{desc:"Jump squats against band resistance",cues:["Band under feet","Hold at shoulders","Squat and explode up","Land softly each rep"]},"Bear Crawl":{desc:"Crawl forward on hands and toes",cues:["Hands and toes only","Knees hover just off ground","Move opposite hand and foot","Keep back flat throughout"]},"Band Squat to Press":{desc:"Squat with band, press overhead at top",cues:["Band under feet","Hold at shoulders","Squat down fully","Stand and press overhead"]},"Bodyweight Circuit (Squats, Push-ups, Planks)":{desc:"Circuit of fundamental bodyweight moves",cues:["10 bodyweight squats","10 push-ups","30-second plank hold","Repeat the full circuit"]}};
+
+const EX={strength:{upper_push:{full:[{name:"Barbell Bench Press",muscle:"Chest/Shoulders/Triceps",avoid:["Shoulders","Wrists","Elbows"]},{name:"Overhead Press",muscle:"Shoulders/Triceps",avoid:["Shoulders","Lower Back","Wrists"]},{name:"Incline Dumbbell Press",muscle:"Upper Chest",avoid:["Shoulders","Wrists"]},{name:"Cable Chest Fly",muscle:"Chest",avoid:["Shoulders"]},{name:"Seated Machine Press",muscle:"Chest/Shoulders",avoid:["Shoulders","Elbows"]},{name:"Landmine Press",muscle:"Shoulders/Chest",avoid:["Shoulders","Lower Back"]},{name:"Close Grip Bench Press",muscle:"Chest/Triceps",avoid:["Elbows","Wrists"]},{name:"Weighted Dip",muscle:"Chest/Triceps/Shoulders",avoid:["Shoulders","Elbows","Wrists"]},{name:"Cable Lateral Raise",muscle:"Shoulders",avoid:["Shoulders"]},{name:"Pec Deck",muscle:"Chest",avoid:["Shoulders","Elbows"]},{name:"Tricep Pushdown",muscle:"Triceps",avoid:["Elbows","Wrists"]},{name:"Dumbbell Chest Fly",muscle:"Chest",avoid:["Shoulders","Elbows"]}],home:[{name:"Dumbbell Floor Press",muscle:"Chest/Triceps",avoid:["Shoulders","Wrists"]},{name:"Dumbbell Shoulder Press",muscle:"Shoulders",avoid:["Shoulders","Wrists"]},{name:"Incline Dumbbell Press",muscle:"Upper Chest",avoid:["Shoulders"]},{name:"Push-Ups (Elevated)",muscle:"Chest/Shoulders",avoid:["Shoulders","Wrists"]},{name:"Dumbbell Arnold Press",muscle:"Shoulders",avoid:["Shoulders","Elbows"]},{name:"Dumbbell Lateral Raise",muscle:"Shoulders",avoid:["Shoulders"]},{name:"Diamond Push-Up",muscle:"Triceps/Chest",avoid:["Elbows","Wrists","Shoulders"]},{name:"Dumbbell Chest Fly",muscle:"Chest",avoid:["Shoulders","Elbows"]},{name:"Pike Push-Up",muscle:"Shoulders",avoid:["Shoulders","Wrists"]}],minimal:[{name:"Dumbbell Floor Press",muscle:"Chest/Triceps",avoid:["Shoulders","Wrists"]},{name:"Dumbbell Shoulder Press",muscle:"Shoulders",avoid:["Shoulders"]},{name:"Push-Ups (Knee or Elevated)",muscle:"Chest/Shoulders",avoid:["Shoulders","Wrists"]},{name:"Band Chest Press",muscle:"Chest",avoid:["Shoulders"]},{name:"Dumbbell Lateral Raise",muscle:"Shoulders",avoid:["Shoulders"]},{name:"Band Lateral Raise",muscle:"Shoulders",avoid:["Shoulders"]},{name:"Diamond Push-Up",muscle:"Triceps/Chest",avoid:["Elbows","Wrists","Shoulders"]},{name:"Band Overhead Press",muscle:"Shoulders/Triceps",avoid:["Shoulders","Wrists"]}]},upper_pull:{full:[{name:"Lat Pulldown",muscle:"Back/Biceps",avoid:["Shoulders","Elbows"]},{name:"Seated Cable Row",muscle:"Back/Biceps",avoid:["Lower Back","Wrists"]},{name:"Barbell Bent-Over Row",muscle:"Back/Biceps",avoid:["Lower Back","Wrists"]},{name:"Face Pulls",muscle:"Rear Delts",avoid:["Shoulders"]},{name:"Single Arm Dumbbell Row",muscle:"Back/Biceps",avoid:["Lower Back","Wrists"]}],home:[{name:"Dumbbell Bent-Over Row",muscle:"Back/Biceps",avoid:["Lower Back","Wrists"]},{name:"Single Arm Dumbbell Row",muscle:"Back/Biceps",avoid:["Lower Back"]},{name:"Band Pull-Aparts",muscle:"Upper Back",avoid:[]},{name:"Dumbbell Reverse Fly",muscle:"Rear Delts",avoid:["Shoulders"]}],minimal:[{name:"Dumbbell Bent-Over Row",muscle:"Back/Biceps",avoid:["Lower Back","Wrists"]},{name:"Band Pull-Aparts",muscle:"Upper Back",avoid:[]},{name:"Band Seated Row",muscle:"Back",avoid:["Lower Back"]},{name:"Dumbbell Reverse Fly",muscle:"Rear Delts",avoid:["Shoulders"]}]},lower_push:{full:[{name:"Barbell Back Squat",muscle:"Quads/Glutes",avoid:["Knees","Lower Back","Hips"]},{name:"Leg Press",muscle:"Quads/Glutes",avoid:["Knees","Lower Back"]},{name:"Goblet Squat",muscle:"Quads/Glutes/Core",avoid:["Knees","Wrists"]},{name:"Bulgarian Split Squat",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Hack Squat Machine",muscle:"Quads",avoid:["Knees","Lower Back"]}],home:[{name:"Goblet Squat",muscle:"Quads/Glutes",avoid:["Knees","Wrists"]},{name:"Dumbbell Lunges",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Dumbbell Step-Ups",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Bulgarian Split Squat",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]}],minimal:[{name:"Goblet Squat",muscle:"Quads/Glutes",avoid:["Knees","Wrists"]},{name:"Band Squat",muscle:"Quads/Glutes",avoid:["Knees"]},{name:"Dumbbell Lunges",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Bodyweight Step-Ups",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]}]},lower_pull:{full:[{name:"Romanian Deadlift",muscle:"Hamstrings/Glutes",avoid:["Lower Back","Wrists"]},{name:"Hip Thrust (Barbell)",muscle:"Glutes",avoid:["Lower Back","Hips"]},{name:"Cable Pull-Through",muscle:"Glutes/Hamstrings",avoid:["Lower Back"]},{name:"Lying Leg Curl",muscle:"Hamstrings",avoid:["Knees"]},{name:"Sumo Deadlift",muscle:"Glutes/Hams/Quads",avoid:["Lower Back","Hips","Knees"]}],home:[{name:"Dumbbell Romanian Deadlift",muscle:"Hamstrings/Glutes",avoid:["Lower Back","Wrists"]},{name:"Dumbbell Hip Thrust",muscle:"Glutes",avoid:["Lower Back"]},{name:"Single Leg Glute Bridge",muscle:"Glutes",avoid:["Lower Back"]},{name:"Dumbbell Stiff-Leg Deadlift",muscle:"Hamstrings",avoid:["Lower Back","Wrists"]}],minimal:[{name:"Dumbbell Romanian Deadlift",muscle:"Hamstrings/Glutes",avoid:["Lower Back","Wrists"]},{name:"Glute Bridge",muscle:"Glutes",avoid:["Lower Back"]},{name:"Band Pull-Through",muscle:"Glutes/Hamstrings",avoid:["Lower Back"]},{name:"Single Leg Glute Bridge",muscle:"Glutes",avoid:[]}]},core:{full:[{name:"Cable Woodchop",muscle:"Obliques/Core",avoid:["Lower Back"]},{name:"Hanging Knee Raise",muscle:"Lower Abs",avoid:["Shoulders","Lower Back","Wrists"]},{name:"Pallof Press",muscle:"Core",avoid:[]},{name:"Plank Hold",muscle:"Core/Stability",avoid:["Shoulders","Wrists"]}],home:[{name:"Dead Bug",muscle:"Core",avoid:["Lower Back"]},{name:"Plank Hold",muscle:"Core",avoid:["Shoulders","Wrists"]},{name:"Bird Dog",muscle:"Core/Back",avoid:["Wrists"]},{name:"Pallof Press (Band)",muscle:"Core",avoid:[]}],minimal:[{name:"Dead Bug",muscle:"Core",avoid:["Lower Back"]},{name:"Plank Hold",muscle:"Core",avoid:["Shoulders","Wrists"]},{name:"Bird Dog",muscle:"Core/Back",avoid:["Wrists"]},{name:"Band Pallof Press",muscle:"Core",avoid:[]}]}}};
+
+EX.hiit={upper_push:{full:[{name:"Thrusters",muscle:"Full Body",avoid:["Shoulders","Knees","Wrists"]},{name:"Push-Ups (Elevated)",muscle:"Chest/Shoulders",avoid:["Shoulders","Wrists"]},{name:"Battle Rope Slams",muscle:"Shoulders/Core",avoid:["Shoulders","Wrists"]}],home:[{name:"Thrusters",muscle:"Full Body",avoid:["Shoulders","Knees"]},{name:"Push-Ups (Elevated)",muscle:"Chest/Shoulders",avoid:["Shoulders","Wrists"]},{name:"Dumbbell Shoulder Press",muscle:"Shoulders",avoid:["Shoulders"]}],minimal:[{name:"Push-Ups (Knee or Elevated)",muscle:"Chest/Shoulders",avoid:["Shoulders","Wrists"]},{name:"Band Squat to Press",muscle:"Full Body",avoid:["Shoulders","Knees"]},{name:"Band Chest Press",muscle:"Chest",avoid:["Shoulders"]}]},upper_pull:{full:[{name:"Kettlebell Swings",muscle:"Back/Glutes",avoid:["Lower Back","Wrists"]},{name:"Face Pulls",muscle:"Upper Back",avoid:["Shoulders"]},{name:"Barbell Bent-Over Row",muscle:"Back",avoid:["Lower Back","Wrists"]}],home:[{name:"Dumbbell Bent-Over Row",muscle:"Back",avoid:["Lower Back","Wrists"]},{name:"Band Pull-Aparts",muscle:"Upper Back",avoid:[]},{name:"Dumbbell Reverse Fly",muscle:"Rear Delts",avoid:["Shoulders"]}],minimal:[{name:"Band Pull-Aparts",muscle:"Upper Back",avoid:[]},{name:"Band Seated Row",muscle:"Back",avoid:["Lower Back"]},{name:"Dumbbell Reverse Fly",muscle:"Rear Delts",avoid:["Shoulders"]}]},lower_push:{full:[{name:"Box Jumps",muscle:"Quads/Glutes/Power",avoid:["Knees","Ankles"]},{name:"Jump Squats",muscle:"Quads/Glutes",avoid:["Knees","Ankles","Lower Back"]},{name:"Wall Balls",muscle:"Full Body",avoid:["Knees","Shoulders"]},{name:"Walking Lunges",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]}],home:[{name:"Jump Squats",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Dumbbell Lunges",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Goblet Squat",muscle:"Quads/Glutes",avoid:["Knees","Wrists"]}],minimal:[{name:"Jump Squats",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Band Resisted Squat Jumps",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]},{name:"Bodyweight Step-Ups",muscle:"Quads/Glutes",avoid:["Knees","Ankles"]}]},lower_pull:{full:[{name:"Kettlebell Swings",muscle:"Glutes/Hams",avoid:["Lower Back","Wrists"]},{name:"Romanian Deadlift",muscle:"Hamstrings/Glutes",avoid:["Lower Back","Wrists"]},{name:"Hip Thrust (Barbell)",muscle:"Glutes",avoid:["Lower Back","Hips"]}],home:[{name:"Dumbbell Romanian Deadlift",muscle:"Hamstrings/Glutes",avoid:["Lower Back","Wrists"]},{name:"Single Leg Glute Bridge",muscle:"Glutes",avoid:[]},{name:"Dumbbell Hip Thrust",muscle:"Glutes",avoid:["Lower Back"]}],minimal:[{name:"Glute Bridge",muscle:"Glutes",avoid:["Lower Back"]},{name:"Band Pull-Through",muscle:"Glutes/Hamstrings",avoid:["Lower Back"]},{name:"Single Leg Glute Bridge",muscle:"Glutes",avoid:[]}]},core:{full:[{name:"Mountain Climbers",muscle:"Core/Cardio",avoid:["Wrists","Shoulders"]},{name:"Burpees",muscle:"Full Body",avoid:["Wrists","Shoulders","Knees"]},{name:"Plank to Push-Up",muscle:"Core/Shoulders",avoid:["Wrists","Shoulders"]}],home:[{name:"Mountain Climbers",muscle:"Core/Cardio",avoid:["Wrists","Shoulders"]},{name:"Burpees",muscle:"Full Body",avoid:["Wrists","Shoulders","Knees"]},{name:"Dead Bug",muscle:"Core",avoid:["Lower Back"]}],minimal:[{name:"Mountain Climbers",muscle:"Core/Cardio",avoid:["Wrists","Shoulders"]},{name:"Bear Crawl",muscle:"Core/Full Body",avoid:["Wrists","Shoulders"]},{name:"Plank Hold",muscle:"Core",avoid:["Shoulders","Wrists"]}]}};
+EX.crossfit=EX.hiit;
+EX.bands={upper_push:{full:EX.strength.upper_push.minimal,home:EX.strength.upper_push.minimal,minimal:EX.strength.upper_push.minimal},upper_pull:{full:EX.strength.upper_pull.minimal,home:EX.strength.upper_pull.minimal,minimal:EX.strength.upper_pull.minimal},lower_push:{full:EX.strength.lower_push.minimal,home:EX.strength.lower_push.minimal,minimal:EX.strength.lower_push.minimal},lower_pull:{full:EX.strength.lower_pull.minimal,home:EX.strength.lower_pull.minimal,minimal:EX.strength.lower_pull.minimal},core:{full:EX.strength.core.minimal,home:EX.strength.core.minimal,minimal:EX.strength.core.minimal}};
+
+const WARMUPS={upper:[{name:"Arm Circles",duration:"20s each"},{name:"Band Pull-Aparts",duration:"10 reps"}],lower:[{name:"Bodyweight Squats",duration:"8 reps"},{name:"Leg Swings",duration:"8 each"}],full:[{name:"March in Place",duration:"20s"},{name:"Arm Circles + Squats",duration:"8 each"}]};
+
+function seededRandom(s){let x=s;return()=>{x=(x*16807)%2147483647;return(x-1)/2147483646};}
+function dateSeed(d){const dt=new Date(d);return dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate();}
+function getSplit(d){if(d<=2)return{label:"Full Body",schedule:Array(d).fill("full")};if(d===3)return{label:"Full Body",schedule:["full","full","full"]};if(d===4)return{label:"Upper / Lower",schedule:["upper","lower","upper","lower"]};if(d===5)return{label:"Push / Pull / Legs",schedule:["push","pull","legs","upper","lower"]};if(d===6)return{label:"Push / Pull / Legs",schedule:["push","pull","legs","push","pull","legs"]};return{label:"PPL + Full",schedule:["push","pull","legs","push","pull","legs","full"]};}
+function pick(list,n,rng){return[...list].sort(()=>rng()-0.5).slice(0,n);}
+function filt(list,avoid){return avoid.length?list.filter(e=>!e.avoid.some(a=>avoid.includes(a))):list;}
+function getCatForSlot(dayType,idx){const m={full:["upper_push","upper_pull","lower_push","lower_pull","core"],upper:["upper_push","upper_push","upper_pull","upper_pull","core"],push:["upper_push","upper_push","upper_push","core"],pull:["upper_pull","upper_pull","upper_pull","core"],lower:["lower_push","lower_push","lower_pull","core"],legs:["lower_push","lower_push","lower_pull","core"]};return(m[dayType]||m.full)[idx]||"core";}
+function gen(dayType,eq,avoid,rng,int,style){const db=EX[style]||EX.strength;const isH=style==="hiit"||style==="crossfit";let exs=[],wu=[];const g=(cat,n)=>pick(filt((db[cat]||{})[eq]||[],avoid),n,rng);if(dayType==="full"){wu=WARMUPS.full;exs=[...g("upper_push",1),...g("upper_pull",1),...g("lower_push",1),...g("lower_pull",1),...g("core",1)];}else if(dayType==="upper"){wu=WARMUPS.upper;exs=[...g("upper_push",2),...g("upper_pull",2),...g("core",1)];}else if(dayType==="push"){wu=WARMUPS.upper;exs=[...g("upper_push",3),...g("core",1)];}else if(dayType==="pull"){wu=WARMUPS.upper;exs=[...g("upper_pull",3),...g("core",1)];}else{wu=WARMUPS.lower;exs=[...g("lower_push",2),...g("lower_pull",1),...g("core",1)];}if(!exs.length)exs=[{name:"Bodyweight Circuit (Squats, Push-ups, Planks)",muscle:"Full Body",avoid:[]}];return{warmup:wu,exercises:exs.map(e=>({...e,sets:isH?int.rounds:int.sets,reps:isH?`${int.hiitWork}/${int.hiitRest}`:int.reps,rest:isH?"between rounds":int.rest,isHIIT:isH}))};}
+const DAYLBL={full:"Full Body",upper:"Upper Body",lower:"Lower Body",push:"Push",pull:"Pull",legs:"Legs"};
+
+function VideoModal({exercise,onClose}){
+  const d=DEMO[exercise.name]||{};const videoId=VIDEO_MAP[exercise.name];
+  const thumbUrl=videoId?`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`:null;
+  const videoUrl=videoId?`https://www.youtube.com/watch?v=${videoId}`:null;
+  const G="#e2b06f";
+  return(
+    <div onClick={onClose} style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:1000,background:"rgba(0,0,0,0.85)",backdropFilter:"blur(12px)",display:"flex",alignItems:"center",justifyContent:"center",padding:12}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"linear-gradient(170deg,#1e2140,#161a35)",borderRadius:20,padding:"20px 18px",maxWidth:420,width:"100%",border:"1px solid rgba(226,176,111,0.15)",boxShadow:"0 24px 80px rgba(0,0,0,0.6)",maxHeight:"90vh",overflowY:"auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:10,color:G,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5}}>Exercise Demo</span>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.08)",border:"none",color:"rgba(255,255,255,0.6)",width:30,height:30,borderRadius:"50%",cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        </div>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:21,color:"#f0f0f0",margin:"6px 0 3px"}}>{exercise.name}</h2>
+        <div style={{fontSize:13,color:G,marginBottom:14,fontWeight:500}}>{exercise.muscle}</div>
+        {thumbUrl?(
+          <a href={videoUrl} target="_blank" rel="noopener noreferrer" style={{display:"block",textDecoration:"none",marginBottom:16}}>
+            <div style={{position:"relative",width:"100%",borderRadius:14,overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer"}}>
+              <img src={thumbUrl} alt={exercise.name} style={{width:"100%",display:"block",borderRadius:14,aspectRatio:"16/9",objectFit:"cover",filter:"brightness(0.8)"}} onError={e=>{e.target.style.display="none"}}/>
+              <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}>
+                <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(220,40,40,0.9)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.4)"}}>
+                  <div style={{width:0,height:0,borderTop:"12px solid transparent",borderBottom:"12px solid transparent",borderLeft:"20px solid #fff",marginLeft:4}}/>
+                </div>
+                <span style={{color:"#fff",fontSize:13,fontWeight:600,textShadow:"0 1px 8px rgba(0,0,0,0.6)",background:"rgba(0,0,0,0.4)",padding:"4px 12px",borderRadius:8}}>Watch Tutorial on YouTube</span>
+              </div>
+            </div>
+          </a>
+        ):(
+          <div style={{background:"rgba(0,0,0,0.3)",borderRadius:14,padding:"32px 16px",textAlign:"center",marginBottom:16,border:"1px solid rgba(255,255,255,0.05)"}}>
+            <div style={{fontSize:32,marginBottom:8}}>🎬</div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>Video demo coming soon</div>
+          </div>
+        )}
+        {d.desc&&<div style={{fontSize:14,color:"rgba(255,255,255,0.55)",marginBottom:14,lineHeight:1.5}}>{d.desc}</div>}
+        {d.cues&&(<div style={{marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Form Cues</div>
+          {d.cues.map((c,i)=>(<div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:7}}>
+            <div style={{minWidth:24,height:24,borderRadius:"50%",background:"rgba(226,176,111,0.1)",color:G,fontSize:12,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+            <span style={{fontSize:14,color:"rgba(255,255,255,0.65)",lineHeight:1.4}}>{c}</span>
+          </div>))}
+        </div>)}
+        <div style={{background:"rgba(226,176,111,0.07)",borderRadius:12,padding:"12px 14px",border:"1px solid rgba(226,176,111,0.1)",display:"flex",justifyContent:"space-around"}}>
+          <div style={{textAlign:"center"}}><div style={{fontSize:20,fontWeight:700,color:G}}>{exercise.sets}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textTransform:"uppercase"}}>{exercise.isHIIT?"Rounds":"Sets"}</div></div>
+          <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
+          <div style={{textAlign:"center"}}><div style={{fontSize:20,fontWeight:700,color:G}}>{exercise.reps}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textTransform:"uppercase"}}>{exercise.isHIIT?"Work/Rest":"Reps"}</div></div>
+          <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
+          <div style={{textAlign:"center"}}><div style={{fontSize:20,fontWeight:700,color:G}}>{exercise.rest}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textTransform:"uppercase"}}>Rest</div></div>
+        </div>
+        {videoUrl&&(<a href={videoUrl} target="_blank" rel="noopener noreferrer" style={{display:"block",textDecoration:"none",marginTop:14}}>
+          <div style={{width:"100%",padding:"13px 0",borderRadius:12,background:"rgba(220,40,40,0.85)",textAlign:"center",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",letterSpacing:0.3,boxShadow:"0 4px 16px rgba(220,40,40,0.25)"}}>▶ &nbsp;Watch Full Tutorial on YouTube</div>
+        </a>)}
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const[screen,setScreen]=useState("setup");
+  const[days,setDays]=useState(4);
+  const[equipment,setEq]=useState("full");
+  const[style,setStyle]=useState("strength");
+  const[intLvl,setIntLvl]=useState("moderate");
+  const[aches,setAches]=useState([]);
+  const[curDay,setCurDay]=useState(0);
+  const[seed,setSeed]=useState(0);
+  const[done,setDone]=useState([]);
+  const[modal,setModal]=useState(null);
+  const[exSeeds,setExSeeds]=useState({});
+
+  const split=getSplit(days);const int=INTENSITY_MAP[intLvl];
+  const C={gold:"#e2b06f",bg:"#1a1a2e",card:"rgba(255,255,255,0.035)",bdr:"rgba(255,255,255,0.07)",t1:"#f0f0f0",t2:"rgba(255,255,255,0.5)",t3:"rgba(255,255,255,0.3)",green:"#7dd8a0"};
+
+  const dayType=split.schedule[curDay]||"full";
+  const baseRng=seededRandom(seed+curDay);
+  const baseWorkout=gen(dayType,equipment,aches,baseRng,int,style);
+
+  const workout=useMemo(()=>{
+    const db=EX[style]||EX.strength;const isH=style==="hiit"||style==="crossfit";
+    const exercises=baseWorkout.exercises.map((ex,idx)=>{const key=`${curDay}-${idx}`;if(exSeeds[key]!==undefined){const cat=getCatForSlot(dayType,idx);const pool=filt((db[cat]||{})[equipment]||[],aches);if(pool.length>0){const rng2=seededRandom(exSeeds[key]);const picked=pick(pool,1,rng2)[0];if(picked)return{...picked,sets:isH?int.rounds:int.sets,reps:isH?`${int.hiitWork}/${int.hiitRest}`:int.reps,rest:isH?"between rounds":int.rest,isHIIT:isH};}}return ex;});
+    return{warmup:baseWorkout.warmup,exercises};
+  },[seed,curDay,exSeeds,equipment,aches,style,intLvl,days]);
+
+  const shuffleSingle=(idx)=>{const key=`${curDay}-${idx}`;setExSeeds(p=>({...p,[key]:(p[key]||0)+Math.floor(Math.random()*10000)+1}));};
+  const handleGenerate=()=>{setCurDay(0);setDone([]);setExSeeds({});setSeed(dateSeed(new Date()));setScreen("workout");};
+
+  const base={fontFamily:"'Nunito Sans',sans-serif",minHeight:"100vh",minHeight:"100dvh",background:"linear-gradient(165deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)",color:C.t1,paddingBottom:32};
+  const hdr=(sz)=>({fontFamily:"'Playfair Display',serif",fontSize:sz,color:C.gold,margin:0});
+  const bdg=(bg,col)=>({padding:"4px 10px",borderRadius:8,background:bg,color:col,fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5,display:"inline-block"});
+
+  if(screen==="setup"){
+    return(
+      <div style={base}>
+        <div style={{padding:"36px 24px 20px",textAlign:"center",borderBottom:`1px solid ${C.bdr}`}}>
+          <h1 style={hdr(30)}>Martin Training</h1>
+          <p style={{fontSize:12,color:C.t3,marginTop:6,fontWeight:300,letterSpacing:2,textTransform:"uppercase"}}>Personalized Training</p>
+        </div>
+        <div style={{padding:"22px 24px 10px"}}>
+          <h3 style={hdr(17)}>Training Days</h3>
+          <div style={{display:"flex",gap:6,justifyContent:"center",marginTop:12}}>
+            {[1,2,3,4,5,6,7].map(d=>(<div key={d} onClick={()=>setDays(d)} style={{width:42,height:42,borderRadius:"50%",cursor:"pointer",border:days===d?`2px solid ${C.gold}`:"2px solid rgba(255,255,255,0.1)",background:days===d?"rgba(226,176,111,0.18)":"transparent",color:days===d?C.gold:"rgba(255,255,255,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize:14,transition:"all 0.2s"}}>{d}</div>))}
+          </div>
+          <div style={{textAlign:"center",marginTop:10}}><span style={bdg("rgba(226,176,111,0.12)",C.gold)}>{split.label}</span></div>
+        </div>
+        <div style={{padding:"14px 24px"}}>
+          <h3 style={hdr(17)}>Workout Style</h3>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12}}>
+            {STYLE_OPTIONS.map(s=>(<div key={s.id} onClick={()=>setStyle(s.id)} style={{background:style===s.id?"rgba(226,176,111,0.1)":C.card,border:style===s.id?"1.5px solid rgba(226,176,111,0.45)":`1px solid ${C.bdr}`,borderRadius:14,padding:"14px 12px",cursor:"pointer",transition:"all 0.2s"}}><div style={{fontSize:22,marginBottom:4}}>{s.icon}</div><div style={{fontSize:13,fontWeight:600,color:style===s.id?C.gold:C.t1}}>{s.label}</div><div style={{fontSize:11,color:C.t3,marginTop:2}}>{s.desc}</div></div>))}
+          </div>
+        </div>
+        <div style={{padding:"10px 24px"}}>
+          <h3 style={hdr(17)}>Intensity</h3>
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            {INTENSITY_OPTIONS.map(o=>(<div key={o.id} onClick={()=>setIntLvl(o.id)} style={{flex:1,background:intLvl===o.id?"rgba(226,176,111,0.1)":C.card,border:intLvl===o.id?"1.5px solid rgba(226,176,111,0.45)":`1px solid ${C.bdr}`,borderRadius:14,padding:"12px 10px",cursor:"pointer",textAlign:"center",transition:"all 0.2s"}}><div style={{fontSize:14,fontWeight:600,color:intLvl===o.id?C.gold:C.t1}}>{o.label}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>{o.desc}</div></div>))}
+          </div>
+        </div>
+        <div style={{padding:"14px 24px"}}>
+          <h3 style={hdr(17)}>Equipment</h3>
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:12}}>
+            {EQUIPMENT_OPTIONS.map(o=>(<div key={o.id} onClick={()=>setEq(o.id)} style={{background:C.card,borderRadius:14,padding:"13px 16px",cursor:"pointer",border:equipment===o.id?"1.5px solid rgba(226,176,111,0.5)":`1px solid ${C.bdr}`,display:"flex",justifyContent:"space-between",alignItems:"center",transition:"all 0.2s"}}><div style={{display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:20}}>{o.icon}</span><div><div style={{fontSize:14,fontWeight:600,color:equipment===o.id?C.gold:C.t1}}>{o.label}</div><div style={{fontSize:11,color:C.t3}}>{o.desc}</div></div></div><div style={{width:20,height:20,borderRadius:"50%",border:equipment===o.id?`2px solid ${C.gold}`:"2px solid rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}>{equipment===o.id&&<div style={{width:10,height:10,borderRadius:"50%",background:C.gold}}/>}</div></div>))}
+          </div>
+        </div>
+        <div style={{padding:"10px 24px"}}>
+          <h3 style={hdr(17)}>Aches or Areas to Avoid</h3>
+          <p style={{fontSize:11,color:C.t3,marginBottom:12,marginTop:4}}>Tap any areas that are sore today</p>
+          <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+            {BODY_AREAS.map(a=>(<div key={a} onClick={()=>setAches(p=>p.includes(a)?p.filter(x=>x!==a):[...p,a])} style={{padding:"8px 14px",borderRadius:24,cursor:"pointer",fontSize:13,fontWeight:500,border:aches.includes(a)?`1.5px solid ${C.gold}`:"1.5px solid rgba(255,255,255,0.12)",background:aches.includes(a)?"rgba(226,176,111,0.15)":"rgba(255,255,255,0.03)",color:aches.includes(a)?C.gold:C.t2,transition:"all 0.2s",userSelect:"none"}}>{a}</div>))}
+          </div>
+        </div>
+        <div style={{padding:"20px 24px 0"}}>
+          <button onClick={handleGenerate} style={{display:"block",width:"100%",padding:16,borderRadius:14,border:"none",background:`linear-gradient(135deg,${C.gold},#c4903f)`,color:C.bg,fontFamily:"'Playfair Display',serif",fontSize:18,cursor:"pointer",boxShadow:"0 4px 20px rgba(226,176,111,0.25)"}}>Generate My Program</button>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={base}>
+      {modal&&<VideoModal exercise={modal} onClose={()=>setModal(null)}/>}
+      <div style={{padding:"28px 24px 16px",textAlign:"center",borderBottom:`1px solid ${C.bdr}`}}>
+        <h1 style={hdr(22)}>Martin Training</h1>
+        <p style={{fontSize:11,color:C.t3,marginTop:4,textTransform:"uppercase",letterSpacing:1.5}}>{split.label} · {STYLE_OPTIONS.find(s=>s.id===style)?.label} · {days} Days</p>
+      </div>
+      <div style={{padding:"16px 24px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <button onClick={()=>setScreen("setup")} style={{background:"none",border:"1px solid rgba(255,255,255,0.15)",color:C.t2,padding:"8px 16px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:500}}>← Settings</button>
+          <button onClick={()=>{setSeed(s=>s+1);setExSeeds({});}} style={{background:"rgba(226,176,111,0.12)",border:"1px solid rgba(226,176,111,0.3)",color:C.gold,padding:"8px 16px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:600}}>↻ Shuffle All</button>
+        </div>
+        <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4,marginBottom:8}}>
+          {split.schedule.map((_,i)=>(<div key={i} onClick={()=>setCurDay(i)} style={{padding:"8px 14px",borderRadius:10,cursor:"pointer",whiteSpace:"nowrap",fontSize:12,fontWeight:600,background:curDay===i?"rgba(226,176,111,0.18)":C.card,border:curDay===i?"1px solid rgba(226,176,111,0.4)":`1px solid ${C.bdr}`,color:curDay===i?C.gold:C.t2,opacity:done.includes(i)?0.5:1,transition:"all 0.2s"}}>Day {i+1}{done.includes(i)?" ✓":""}</div>))}
+        </div>
+        <div style={{textAlign:"center",margin:"12px 0"}}>
+          <span style={{fontFamily:"'Playfair Display',serif",fontSize:24,color:C.t1}}>{DAYLBL[dayType]}</span>
+          <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",marginTop:10}}>
+            <span style={bdg("rgba(226,176,111,0.12)",C.gold)}>~30 min</span>
+            <span style={bdg("rgba(226,176,111,0.12)",C.gold)}>{workout.exercises[0]?.isHIIT?`${int.rounds} rounds`:`${int.sets}×${int.reps}`}</span>
+            <span style={bdg("rgba(125,216,160,0.12)",C.green)}>{intLvl}</span>
+          </div>
+          {aches.length>0&&<div style={{marginTop:8,fontSize:12,color:C.t3}}>Avoiding: {aches.join(", ")}</div>}
+        </div>
+        <div style={{background:C.card,borderRadius:14,border:`1px solid ${C.bdr}`,padding:16,marginTop:10,marginBottom:12}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.gold,textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Warm-Up · 3 min</div>
+          {workout.warmup.map((w,i)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",fontSize:13,color:C.t2,borderBottom:i<workout.warmup.length-1?"1px solid rgba(255,255,255,0.03)":"none"}}><span>{w.name}</span><span style={{color:C.t3}}>{w.duration}</span></div>))}
+        </div>
+        <div style={{background:C.card,borderRadius:14,border:`1px solid ${C.bdr}`,padding:16,position:"relative"}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.gold,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Main Workout</div>
+          <div style={{fontSize:11,color:C.t3,marginBottom:10}}>Tap exercise for video & form cues · ↻ to swap</div>
+          {workout.exercises.map((ex,i)=>(<div key={`${curDay}-${i}-${ex.name}`} style={{display:"flex",alignItems:"center",padding:"11px 0",borderBottom:i<workout.exercises.length-1?"1px solid rgba(255,255,255,0.05)":"none",gap:8}}>
+            <button onClick={e=>{e.stopPropagation();shuffleSingle(i);}} style={{background:"rgba(226,176,111,0.06)",border:"1px solid rgba(226,176,111,0.18)",color:C.gold,width:32,height:32,borderRadius:8,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>↻</button>
+            <div onClick={()=>setModal(ex)} style={{flex:1,cursor:"pointer",minWidth:0}}>
+              <div style={{fontSize:14,fontWeight:500,color:C.t1,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span>{ex.name}</span><span style={{fontSize:9,color:"#fff",background:"rgba(220,40,40,0.75)",padding:"2px 7px",borderRadius:4,fontWeight:700,flexShrink:0}}>▶ VIDEO</span></div>
+              <div style={{fontSize:12,color:C.t3,marginTop:2}}>{ex.muscle}</div>
+            </div>
+            <div style={{textAlign:"right",fontSize:13,color:C.gold,fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{ex.sets}×{ex.reps}<div style={{fontSize:10,color:C.t3,fontWeight:400}}>rest {ex.rest}</div></div>
+          </div>))}
+          {done.includes(curDay)&&<div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",color:C.green,fontFamily:"'Playfair Display',serif",fontSize:20}}>✓ Completed</div>}
+        </div>
+        {!done.includes(curDay)&&(<button onClick={()=>setDone(p=>[...p,curDay])} style={{display:"block",width:"100%",padding:16,borderRadius:14,border:"none",background:`linear-gradient(135deg,${C.green},#4caf6e)`,color:C.bg,fontFamily:"'Playfair Display',serif",fontSize:18,cursor:"pointer",boxShadow:"0 4px 20px rgba(125,216,160,0.2)",marginTop:12}}>Mark Day Complete ✓</button>)}
+        <div style={{textAlign:"center",marginTop:20,fontSize:12,color:C.t3}}>{done.length} of {days} workouts completed this week</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
